@@ -21,6 +21,9 @@ class CatalogView: UIViewController, CatalogViewInput {
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        view.backgroundColor = .purple
+        Task {
+            let ans = try? await NetworkClientImpl().sendRequest(request: ProductRequest())
+            print(ans)
+        }
     }
 }
