@@ -9,21 +9,35 @@ import UIKit
 
 protocol CatalogViewInput: AnyObject {
     var output: CatalogViewOutput? { get set }
+    func display(products: [CollectionViewModel])
 }
 
 protocol CatalogViewOutput {
-
+    func viewDidLoad()
 }
 
 class CatalogView: UIViewController, CatalogViewInput {
     
     var output: CatalogViewOutput?
-
+    let collectionView = CollectionView()
+        
+    func display(products: [CollectionViewModel]) {
+        collectionView.display(models: products)
+    }
+    
     override func viewDidLoad() {
         super.viewDidLoad()
-        Task {
-            let ans = try? await NetworkClientImpl().sendRequest(request: ProductRequest())
-            print(ans)
-        }
+        configureCollectionView()
+        output?.viewDidLoad()
+    }
+    
+    private func configureCollectionView() {
+        view.addSubview(collectionView)
+        collectionView.setCollectionViewLayout(UIHelper.createTwoSquareColumnLayout(in: self.view))
+    }
+    
+    override func viewWillLayoutSubviews() {
+        super.viewWillLayoutSubviews()
+        collectionView.frame = view.bounds
     }
 }

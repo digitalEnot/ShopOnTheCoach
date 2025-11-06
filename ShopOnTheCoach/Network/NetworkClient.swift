@@ -8,7 +8,7 @@
 import Foundation
 
 protocol NetworkClient {
-    func sendRequest<Request: NetworkRequest>(request: Request) async throws(NetworkError) -> [Request.Responce]
+    func sendRequest<Request: NetworkRequest>(request: Request) async throws(NetworkError) -> Request.Response
 }
 
 final class NetworkClientImpl: NetworkClient {
@@ -20,15 +20,24 @@ final class NetworkClientImpl: NetworkClient {
         self.requestBuilder = requestBuilder
     }
     
-    func sendRequest<Request: NetworkRequest>(request: Request) async throws(NetworkError) -> [Request.Responce] {
+    func sendRequest<Request: NetworkRequest>(request: Request) async throws(NetworkError) -> Request.Response {
         let urlRequest = try requestBuilder.build(request: request)
         
         do {
             let (data, _) = try await urlSession.data(for: urlRequest)
-            let responce = try JSONDecoder().decode([Request.Responce].self, from: data)
-            return responce
+            return try decodeResponse(from: data, converter: request.responseConverter)
         } catch {
             throw .cantBuildUrlFromRequest  // TODO: заменить ошибку
+        }
+    }
+    
+    private func decodeResponse<Converter: NetworkResponseConverter>(
+        from data: Data, converter: Converter
+    ) throws -> Converter.Response {
+        if let response = converter.decodeResponse(from: data) {
+            return response
+        } else {
+            throw URLError(.cannotDecodeRawData)
         }
     }
 }

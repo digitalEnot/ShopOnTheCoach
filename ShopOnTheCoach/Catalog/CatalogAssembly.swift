@@ -11,7 +11,8 @@ class CatalogAssembly {
     static func assembleCatalogModule() -> UIViewController {
         let view = CatalogView()
         let router = CatalogRouter()
-        let interactor = CatalogInteractor()
+        let networkClient = NetworkClientImpl()
+        let interactor = CatalogInteractor(networkClient: networkClient)
         let presenter = CatalogPresenter(router: router, interactor: interactor, view: view)
         
         interactor.output = presenter

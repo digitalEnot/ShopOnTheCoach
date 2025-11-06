@@ -9,9 +9,10 @@ import Foundation
 
 protocol CatalogPresenterInput {
     var output: CatalogPresenterOutput? { get set }
+    
 }
 
-// вот этот протокол сейчас не обязателен, но он нужен для вызова меодов из другого presenter.
+// вот этот протокол сейчас необязателен, но он нужен для вызова меодов из другого presenter.
 protocol CatalogPresenterOutput: AnyObject {
     
 }
@@ -28,10 +29,33 @@ class CatalogPresenter: CatalogPresenterInput {
         self.interactor = interactor
         self.view = view
     }
+    
+    private func fetchProducts() {
+        Task {
+            do {
+                let products = try await interactor.fetchProducts()
+                
+                view?.display(products: products
+                    .map {
+                        CollectionViewModel(
+                            id: ProductCell.reuseID,
+                            data: ProductCellData(imageUrls: $0.images),
+                            cellType: ProductCell.self
+                        )
+                    }
+                )
+            }
+            catch {
+                print("error") // TODO: заменить
+            }
+        }
+    }
 }
 
 extension CatalogPresenter: CatalogViewOutput {
-    
+    func viewDidLoad() {
+        fetchProducts()
+    }
 }
 
 extension CatalogPresenter: CatalogInteractorOutput {

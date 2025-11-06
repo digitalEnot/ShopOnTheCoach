@@ -15,7 +15,7 @@ final class RequestBuilderImpl: RequestBuilder {
     
     // MARK: - RequestBuilder
     func build(request: any NetworkRequest) throws(NetworkError) -> URLRequest {
-        guard let url = URL(string: "https://\(request.host)/\(request.path)") else {
+        guard let url = URL(string: "\(request.host)/\(request.path)") else {
             throw .cantBuildUrlFromRequest // TODO: заменить ошибку
         }
         

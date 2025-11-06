@@ -8,9 +8,10 @@
 import Foundation
 
 protocol NetworkRequest {
-    associatedtype Responce: Decodable
+    associatedtype Response: Decodable
     
     var host: String { get }
     var path: String { get }
     var httpMethod: HttpMethod { get }
+    var responseConverter: NetworkResponseConverterOf<Response> { get }
 }
