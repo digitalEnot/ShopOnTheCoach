@@ -9,7 +9,7 @@ import Foundation
 
 protocol CatalogInteractorInput {
     var output: CatalogInteractorOutput? { get set }
-    func fetchProducts() async throws -> [Product]
+    func fetchProducts(offset: Int) async throws -> [Product]
 }
 
 protocol CatalogInteractorOutput: AnyObject {
@@ -24,7 +24,7 @@ class CatalogInteractor: CatalogInteractorInput {
         self.networkClient = networkClient
     }
 
-    func fetchProducts() async throws -> [Product] {
-        try await networkClient.sendRequest(request: ProductRequest())
+    func fetchProducts(offset: Int) async throws -> [Product] {
+        try await networkClient.sendRequest(request: ProductRequest(offset: offset))
     }
 }

@@ -11,7 +11,7 @@ class ImageRequest: NetworkRequest {
     typealias Response = Data
         
     var host: String
-    var path = "products"
+    var path = ""
     var httpMethod: HttpMethod = .GET
     var responseConverter = NetworkResponseConverterOf<Response>(converter: DataToResponseConverter())
     

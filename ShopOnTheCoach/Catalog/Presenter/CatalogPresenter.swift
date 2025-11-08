@@ -28,12 +28,28 @@ class CatalogPresenter: CatalogPresenterInput {
         self.router = router
         self.interactor = interactor
         self.view = view
+        setupView()
+    }
+    
+    private func setupView() {
+        view?.onLoadMore = { [weak self] offset in
+            guard let self else { return [] }
+            guard let products = try? await self.interactor.fetchProducts(offset: offset) else { return [] }
+            return products
+                .map {
+                    CollectionViewModel(
+                        id: ProductCell.reuseID,
+                        data: ProductCellData(imageUrls: $0.images),
+                        cellType: ProductCell.self
+                    )
+                }
+        }
     }
     
     private func fetchProducts() {
         Task {
             do {
-                let products = try await interactor.fetchProducts()
+                let products = try await interactor.fetchProducts(offset: 0)
                 
                 view?.display(products: products
                     .map {

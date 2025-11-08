@@ -11,7 +11,11 @@ class ProductRequest: NetworkRequest {
     typealias Response = [Product]
         
     var host = "https://api.escuelajs.co/api/v1"
-    var path = "products"
+    var path: String
     var httpMethod: HttpMethod = .GET
     var responseConverter = NetworkResponseConverterOf<Response>(converter: DecodingNetworkResponseConverter())
+    
+    init(offset: Int) {
+        self.path = "products?offset=\(offset)&limit=10"
+    }
 }

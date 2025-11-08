@@ -9,6 +9,7 @@ import UIKit
 
 protocol CatalogViewInput: AnyObject {
     var output: CatalogViewOutput? { get set }
+    var onLoadMore: ((Int) async -> [CollectionViewModel])? { get set }
     func display(products: [CollectionViewModel])
 }
 
@@ -20,6 +21,11 @@ class CatalogView: UIViewController, CatalogViewInput {
     
     var output: CatalogViewOutput?
     let collectionView = CollectionView()
+    
+    var onLoadMore: ((Int) async -> [CollectionViewModel])? {
+        get { collectionView.onLoadMore }
+        set { collectionView.onLoadMore = newValue }
+    }
         
     func display(products: [CollectionViewModel]) {
         collectionView.display(models: products)

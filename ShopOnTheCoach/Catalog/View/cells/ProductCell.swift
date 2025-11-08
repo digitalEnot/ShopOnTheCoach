@@ -23,6 +23,10 @@ final class ProductCell: UICollectionViewCell, CollectionViewCellInput {
         fatalError("init(coder:) has not been implemented")
     }
     
+    override func prepareForReuse() {
+        imageView.image = nil
+    }
+    
     func update(with data: Any) {
         guard let data = data as? ProductCellData else { return }
         imageView.loadImage(at: data.imageUrls[0])
