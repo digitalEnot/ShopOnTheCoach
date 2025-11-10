@@ -9,10 +9,46 @@ import UIKit
 
 class CollectionView: UIView {
     
+    enum Section {
+        case main
+    }
+    
     private var models: [CollectionViewModel] = []
     private var registerCells: Set<String> = []
     var onLoadMore: ((Int) async -> [CollectionViewModel])?
     var isLoading = false
+    var dataSourse: UICollectionViewDiffableDataSource<Section, CollectionViewModel>?
+    
+    private func configureDataSourse() {
+        dataSourse = UICollectionViewDiffableDataSource<Section, CollectionViewModel>(collectionView: collectionView, cellProvider: { collectionView, indexPath, model in
+            let cell = self.cell(indexPath: indexPath, model: model)
+            if let cell = cell as? CollectionViewCell {
+                cell.update(with: model.data)
+            }
+            return cell
+        })
+    }
+    
+    private func cell(indexPath: IndexPath, model: CollectionViewModel) -> UICollectionViewCell {
+        if !registerCells.contains(model.typeName) {
+            registerCells.insert(model.typeName)
+            collectionView.register(
+                model.cellType,
+                forCellWithReuseIdentifier: model.typeName
+            )
+        }
+        return collectionView.dequeueReusableCell(withReuseIdentifier: model.typeName, for: indexPath)
+    }
+    
+    func updateData(on models: [CollectionViewModel]) {
+        var snapshot = NSDiffableDataSourceSnapshot<Section, CollectionViewModel>()
+        snapshot.appendSections([.main])
+        snapshot.appendItems(models)
+        DispatchQueue.main.async { [weak self] in
+            self?.dataSourse?.apply(snapshot, animatingDifferences: true)
+            self?.isLoading = false
+        }
+    }
     
     private let collectionView = UICollectionView(frame: .zero, collectionViewLayout: UICollectionViewLayout())
     
@@ -21,6 +57,7 @@ class CollectionView: UIView {
         
         addSubview(collectionView)
         setUpContent()
+        configureDataSourse()
     }
     
     required init?(coder: NSCoder) {
@@ -28,7 +65,6 @@ class CollectionView: UIView {
     }
     
     private func setUpContent() {
-        collectionView.dataSource = self
         collectionView.delegate = self
         collectionView.backgroundColor = Spec.backgroundColor
     }
@@ -37,7 +73,7 @@ class CollectionView: UIView {
         guard self.models != models else { return }
         
         self.models = models
-        collectionView.reloadData()
+        updateData(on: models)
     }
     
     func setCollectionViewLayout(_ layout: UICollectionViewLayout) {
@@ -50,34 +86,6 @@ class CollectionView: UIView {
         collectionView.frame = bounds
     }
     
-}
-
-extension CollectionView: UICollectionViewDataSource {
-    func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-        models.count
-    }
-
-    func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
-        let model = models[indexPath.item]
-        let cell = cell(indexPath: indexPath, model: model)
-
-        if let cell = cell as? CollectionViewCellInput {
-            cell.update(with: model.data)
-        }
-        
-        return cell
-    }
-    
-    private func cell(indexPath: IndexPath, model: CollectionViewModel) -> UICollectionViewCell {
-        if !registerCells.contains(model.id) {
-            registerCells.insert(model.id)
-            collectionView.register(
-                model.cellType,
-                forCellWithReuseIdentifier: model.id
-            )
-        }
-        return collectionView.dequeueReusableCell(withReuseIdentifier: model.id, for: indexPath)
-    }
 }
 
 extension CollectionView: UICollectionViewDelegate {
@@ -97,11 +105,9 @@ extension CollectionView: UICollectionViewDelegate {
         isLoading = true
         guard let onLoadMore else { isLoading = false; return }
         Task {
-            let oldCount = models.count
-            models.append(contentsOf: await onLoadMore(oldCount))
-            let newIndexPaths = (oldCount..<models.count).map { IndexPath(item: $0, section: 0) }
-            collectionView.insertItems(at: newIndexPaths)
-            isLoading = false
+            let newModels = await onLoadMore(models.count)
+            models.append(contentsOf: newModels)
+            updateData(on: models)
         }
     }
 }
