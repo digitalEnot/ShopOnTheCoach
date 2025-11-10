@@ -14,6 +14,7 @@ class ProductRequest: NetworkRequest {
     var path: String
     var httpMethod: HttpMethod = .GET
     var responseConverter = NetworkResponseConverterOf<Response>(converter: DecodingNetworkResponseConverter())
+    var needToCache: Bool = false
     
     init(offset: Int) {
         self.path = "products?offset=\(offset)&limit=10"

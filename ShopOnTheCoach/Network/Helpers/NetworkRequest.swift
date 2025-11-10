@@ -14,4 +14,5 @@ protocol NetworkRequest {
     var path: String { get }
     var httpMethod: HttpMethod { get }
     var responseConverter: NetworkResponseConverterOf<Response> { get }
+    var needToCache: Bool { get }
 }

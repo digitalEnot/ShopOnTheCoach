@@ -14,6 +14,7 @@ class ImageRequest: NetworkRequest {
     var path = ""
     var httpMethod: HttpMethod = .GET
     var responseConverter = NetworkResponseConverterOf<Response>(converter: DataToResponseConverter())
+    var needToCache = true
     
     init(host: String) {
         self.host = host
