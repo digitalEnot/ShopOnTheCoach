@@ -39,7 +39,7 @@ class CatalogPresenter: CatalogPresenterInput {
                 .map {
                     CollectionViewModel(
                         id: ProductCell.reuseID,
-                        data: ProductCellData(imageUrls: $0.images),
+                        data: ProductCellData(imageUrls: $0.images, title: $0.title),
                         cellType: ProductCell.self
                     )
                 }
@@ -55,7 +55,7 @@ class CatalogPresenter: CatalogPresenterInput {
                     .map {
                         CollectionViewModel(
                             id: ProductCell.reuseID,
-                            data: ProductCellData(imageUrls: $0.images),
+                            data: ProductCellData(imageUrls: $0.images, title: $0.title),
                             cellType: ProductCell.self
                         )
                     }

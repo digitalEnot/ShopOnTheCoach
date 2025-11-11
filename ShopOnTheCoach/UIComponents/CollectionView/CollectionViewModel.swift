@@ -17,18 +17,14 @@ struct CollectionViewModel: Equatable, Hashable, @unchecked Sendable {
     let data: AnyHashable
     let cellType: CollectionViewCell.Type
     
-    var typeName: String {
-        String(describing: cellType)
-    }
-    
     static func == (lhs: CollectionViewModel, rhs: CollectionViewModel) -> Bool {
         lhs.id == rhs.id &&
         lhs.data == rhs.data
     }
     
     func hash(into hasher: inout Hasher) {
-            hasher.combine(id)
-            hasher.combine(data)
-            hasher.combine(ObjectIdentifier(cellType))
-        }
+        hasher.combine(id)
+        hasher.combine(data)
+        hasher.combine(ObjectIdentifier(cellType))
+    }
 }

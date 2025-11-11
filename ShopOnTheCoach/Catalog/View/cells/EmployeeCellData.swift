@@ -8,4 +8,6 @@
 
 struct ProductCellData: Hashable {
     let imageUrls: [String]
+    let title: String 
 }
+

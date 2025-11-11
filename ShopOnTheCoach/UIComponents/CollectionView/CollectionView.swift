@@ -30,14 +30,14 @@ class CollectionView: UIView {
     }
     
     private func cell(indexPath: IndexPath, model: CollectionViewModel) -> UICollectionViewCell {
-        if !registerCells.contains(model.typeName) {
-            registerCells.insert(model.typeName)
+        if !registerCells.contains(model.id) {
+            registerCells.insert(model.id)
             collectionView.register(
                 model.cellType,
-                forCellWithReuseIdentifier: model.typeName
+                forCellWithReuseIdentifier: model.id
             )
         }
-        return collectionView.dequeueReusableCell(withReuseIdentifier: model.typeName, for: indexPath)
+        return collectionView.dequeueReusableCell(withReuseIdentifier: model.id, for: indexPath)
     }
     
     func updateData(on models: [CollectionViewModel]) {

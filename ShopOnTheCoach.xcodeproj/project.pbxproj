@@ -230,8 +230,8 @@
 		73E3A0742EBD31F2007E60E6 /* Response */ = {
 			isa = PBXGroup;
 			children = (
-				7373BDB22EBCB85700C27D99 /* NetworkResponseConverterOf.swift */,
 				7373BD9B2EBC9FB200C27D99 /* DecodingNetworkResponseConverter.swift */,
+				7373BDB22EBCB85700C27D99 /* NetworkResponseConverterOf.swift */,
 			);
 			path = Response;
 			sourceTree = "<group>";

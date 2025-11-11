@@ -13,14 +13,12 @@ protocol NetworkResponseConverter: AnyObject {
 }
 
 final class DecodingNetworkResponseConverter<Response>: NetworkResponseConverter where Response: Decodable {
-    
     func decodeResponse(from data: Data) -> Response? {
         try? JSONDecoder().decode(Response.self, from: data)
     }
 }
 
 final class DataToResponseConverter<Response>: NetworkResponseConverter where Response: Decodable {
-    
     func decodeResponse(from data: Data) -> Response? {
         data as? Response
     }
