@@ -13,20 +13,56 @@ class CollectionView: UIView {
         case main
     }
     
-    private var models: [CollectionViewModel] = []
-    private var registerCells: Set<String> = []
+    private let collectionView = UICollectionView(frame: .zero, collectionViewLayout: UICollectionViewLayout())
+    var dataSourse: UICollectionViewDiffableDataSource<Section, CollectionViewModel>?
+    var loadingView: LoadingFooterView?
+    
     var onLoadMore: ((Int) async -> [CollectionViewModel])?
     var isLoading = false
-    var dataSourse: UICollectionViewDiffableDataSource<Section, CollectionViewModel>?
+    
+    private var models: [CollectionViewModel] = []
+    private var registerCells: Set<String> = []
+    
+    init() {
+        super.init(frame: .zero)
+        setUpContent()
+        configureDataSourse()
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
+    override func layoutSubviews() {
+        super.layoutSubviews()
+        collectionView.frame = bounds
+    }
     
     private func configureDataSourse() {
-        dataSourse = UICollectionViewDiffableDataSource<Section, CollectionViewModel>(collectionView: collectionView, cellProvider: { collectionView, indexPath, model in
+        dataSourse = UICollectionViewDiffableDataSource<Section, CollectionViewModel>(collectionView: collectionView) {
+            collectionView, indexPath, model in
             let cell = self.cell(indexPath: indexPath, model: model)
             if let cell = cell as? CollectionViewCell {
                 cell.update(with: model.data)
             }
             return cell
-        })
+        }
+        
+        dataSourse?.supplementaryViewProvider = { [weak self] collectionView, kind, indexPath in
+            guard let self = self else { return nil }
+            
+            if kind == UICollectionView.elementKindSectionFooter {
+                let footer = collectionView.dequeueReusableSupplementaryView(
+                    ofKind: kind,
+                    withReuseIdentifier: LoadingFooterView.reuseId,
+                    for: indexPath
+                ) as! LoadingFooterView
+                
+                self.loadingView = footer
+                return footer
+            }
+            return nil
+        }
     }
     
     private func cell(indexPath: IndexPath, model: CollectionViewModel) -> UICollectionViewCell {
@@ -40,33 +76,32 @@ class CollectionView: UIView {
         return collectionView.dequeueReusableCell(withReuseIdentifier: model.id, for: indexPath)
     }
     
-    func updateData(on models: [CollectionViewModel]) {
+    private func setUpContent() {
+        addSubview(collectionView)
+        collectionView.delegate = self
+        collectionView.backgroundColor = Spec.backgroundColor
+        collectionView.register(LoadingFooterView.self, forSupplementaryViewOfKind: UICollectionView.elementKindSectionFooter, withReuseIdentifier: LoadingFooterView.reuseId)
+    }
+    
+    private func scrolledToEnd() {
+        isLoading = true
+        collectionView.collectionViewLayout.invalidateLayout()
+        guard let onLoadMore else { isLoading = false; return }
+        Task {
+            let newModels = await onLoadMore(models.count)
+            models.append(contentsOf: newModels)
+            isLoading = false
+            updateData(on: models)
+        }
+    }
+    
+    private func updateData(on models: [CollectionViewModel]) {
         var snapshot = NSDiffableDataSourceSnapshot<Section, CollectionViewModel>()
         snapshot.appendSections([.main])
         snapshot.appendItems(models)
         DispatchQueue.main.async { [weak self] in
             self?.dataSourse?.apply(snapshot, animatingDifferences: true)
-            self?.isLoading = false
         }
-    }
-    
-    private let collectionView = UICollectionView(frame: .zero, collectionViewLayout: UICollectionViewLayout())
-    
-    init() {
-        super.init(frame: .zero)
-        
-        addSubview(collectionView)
-        setUpContent()
-        configureDataSourse()
-    }
-    
-    required init?(coder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
-    }
-    
-    private func setUpContent() {
-        collectionView.delegate = self
-        collectionView.backgroundColor = Spec.backgroundColor
     }
     
     func display(models: [CollectionViewModel]) {
@@ -79,13 +114,6 @@ class CollectionView: UIView {
     func setCollectionViewLayout(_ layout: UICollectionViewLayout) {
         collectionView.setCollectionViewLayout(layout, animated: false)
     }
-    
-    // MARK: - Layout
-    override func layoutSubviews() {
-        super.layoutSubviews()
-        collectionView.frame = bounds
-    }
-    
 }
 
 extension CollectionView: UICollectionViewDelegate {
@@ -100,19 +128,30 @@ extension CollectionView: UICollectionViewDelegate {
             }
         }
     }
+}
+
+extension CollectionView: UICollectionViewDelegateFlowLayout {
+    func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, referenceSizeForFooterInSection section: Int) -> CGSize {
+        if !self.isLoading {
+            return CGSize.zero
+        } else {
+            return CGSize(width: collectionView.bounds.size.width, height: 65)
+        }
+    }
     
-    private func scrolledToEnd() {
-        isLoading = true
-        guard let onLoadMore else { isLoading = false; return }
-        Task {
-            let newModels = await onLoadMore(models.count)
-            models.append(contentsOf: newModels)
-            updateData(on: models)
+    func collectionView(_ collectionView: UICollectionView, willDisplaySupplementaryView view: UICollectionReusableView, forElementKind elementKind: String, at indexPath: IndexPath) {
+        if elementKind == UICollectionView.elementKindSectionFooter {
+            self.loadingView?.startAnimating()
+        }
+    }
+    
+    func collectionView(_ collectionView: UICollectionView, didEndDisplayingSupplementaryView view: UICollectionReusableView, forElementOfKind elementKind: String, at indexPath: IndexPath) {
+        if elementKind == UICollectionView.elementKindSectionFooter {
+            self.loadingView?.stopAnimating()
         }
     }
 }
 
-// MARK: - Spec
 fileprivate enum Spec {
     static let backgroundColor = UIColor.systemBackground
 }
